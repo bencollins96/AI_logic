@@ -13,6 +13,8 @@ solve_task_1_3(Task,Cost) :-
   reverse(R,[_Init|Path]),
   agent_do_moves(oscar,Path).
 %%%%%%%%%% Part 1 & 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 %%%%%%%%%% Part 4 (Optional) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 solve_task_4(Task,Cost):-
   my_agent(Agent),
@@ -27,13 +29,17 @@ solve_task_4(Task,Cost):-
 %% backtracking depth-first search, needs to be changed to agenda-based A*
 solve_task_bt(Task,[Current|Agenda],Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :-
   achieved(Task,Current,RPath,Cost,NewPos).
-solve_task_bt(Task,[Current|Agenda],D,RR,Cost,NewPos) :-
+solve_task_bt(go(Exit),[Current|Agenda],D,RR,Cost,NewPos) :-
   Current = [c(F,P)|RPath],
   search(P,P1,R,C),
+  setof([c(K,B),B|RPath], search(P,B,B,K), Children),
+  %writeln(Children),
   \+ memberchk(R,RPath),  % check we have not been here already
   D1 is D+1,
   F1 is F+C,
-  solve_task_bt(Task,[[c(F1,P1),R|RPath]|Agenda],D1,RR,Cost,NewPos).  % backtrack search
+  writeln(Exit),
+  %writeln(Agenda),
+  solve_task_bt(go(Exit),[[c(F1,P1),R|RPath]|Agenda],D1,RR,Cost,NewPos).  % backtrack search
 
 achieved(go(Exit),Current,RPath,Cost,NewPos) :-
   Current = [c(Cost,NewPos)|RPath],
