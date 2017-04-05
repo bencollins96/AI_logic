@@ -81,6 +81,26 @@ solve_task_bt(find(o(X)),[Current|Agenda],D,RR,Cost,NewPos,Visited) :-
   D1 is D+1,
   solve_task_bt(find(o(X)),MinusAgenda,D1,RR,Cost,NewPos, [P|Visited]). 
 
+solve_task_bt(find(c(X)),[Current|Agenda],D,RR,Cost,NewPos,Visited) :-
+  
+  %Obtains the current node along with its cost and the path to get there.
+  Current = [c(F,G,P)|RPath],
+  D1 is D +1,  
+
+  %Set the distance travelled to G+1 for all children of the current node.
+  G1 is G+1, 
+
+  %Find all the children of the current node... but they cannot be in visited list.
+  %If there are no such children and therefore setof fails -> leave the agenda unchanged.
+  (setof([c(G1,G1,Pos1),Pos1|RPath], search2(P,Pos1,Pos1,_,F1,_,G1,Visited), Children) 
+  -> merge(Agenda,Children,NewAgenda)
+  ; NewAgenda = Agenda
+  ),
+  
+  remove_items(NewAgenda,Visited,MinusAgenda),
+  
+  D1 is D+1,
+  solve_task_bt(find(c(X)),MinusAgenda,D1,RR,Cost,NewPos, [P|Visited]). 
 
 
 
