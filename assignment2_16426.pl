@@ -1,10 +1,5 @@
 candidate_number(12345).
 
-
-%Stuff still to do:
-%Fix part1. why does it not use breadth first search?!.
-
-
 solve_task(Task,Cost) :-
   ( part(1) -> solve_task_1_3(Task, Cost)
   ; part(3) -> solve_task_1_3(Task, Cost)
@@ -50,6 +45,7 @@ solve_task_bt(go(GoalPos),[Current|Agenda],D,RR,Cost,NewPos,Visited) :-
 
   %Find all the children of the current node... but they cannot be in visited list.
   %If there are no such children and therefore setof fails -> leave the agenda unchanged.
+  
   (setof([c(F1,G1,Pos1),Pos1|RPath], search1(P,Pos1,Pos1,_,F1,GoalPos,G1,Visited), Children) 
   -> merge(Agenda,Children,NewAgenda)
   ; NewAgenda = Agenda
