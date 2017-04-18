@@ -2,13 +2,15 @@
 % find_identity(-A)
 
 %Main function - Identifies actors that it may possibly be.
+
 find_identity(A):-
     setof(A, actor(A), Possibles),
     find_identity(A,Possibles,1).
 
-%Sort of a base case. If the list of possible actors is only 1 actor, then it tests to see 
+%Base case. If the list of possible actors is only 1 actor, then it tests to see 
 % if it is indeed an actor, then unifies A with actor and cuts to avoid further backtracking 
 % i.e repeating the same actor over and over._
+
 find_identity(A,[Inter],_):-
     actor(Inter),
     A = Inter,!.
@@ -19,14 +21,20 @@ find_identity(A,[Inter],_):-
 %passed as an input to possible_actor? probably makes more sense.
 
 find_identity(A,Possibles,Num):-
-    agent_current_energy(oscar,E),
+    
+    %makeshift.... - Need to get game number from somewhere
+    my_agent(Agent),
+
+    query_world(agent_current_energy,[Agent,E]),
 
     %if energy is less than 60 topup. else continue on your journey
     (E <60
-    -> solve_task(find(c(X)),C), agent_topup_energy(oscar,c(X)) 
+    -> solve_task(find(c(X)),C), query_world(agent_topup_energy, [Agent,c(X)]) 
     ;true),
 
     find_link(Testlink,Num),
+
+
     Num1 is Num+1,
     writeln(Testlink),
     setof(A,possible_actor(A,Testlink),NewPossibles),
@@ -58,17 +66,9 @@ check([[H|Links]|T],Testlink):-
 
 %%%%%%%%%%%%%%% Just do sequentially at least then it works..
 find_link(Testlink,Num):-
-    solve_task(find(o(Num)),C),    
-    agent_ask_oracle(oscar,o(Num),link,Testlink).
+    solve_task(find(o(X)),C),  
+    writeln('Solved Task'),
+    my_agent(Agent),
+    query_world(agent_ask_oracle,[Agent,o(X),link,Testlink]),
+    writeln('Found link').
 
-
-
-
-
-
-
-
-
-
-%Lets think about it. each time test is called it should probably call some other function
-%   sayyyy find_oracle() which returns a testlink?

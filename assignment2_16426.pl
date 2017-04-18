@@ -16,12 +16,52 @@ solve_task_1_3(Task,Cost) :-
 %%%%%%%%%% Part 1 & 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%% Part 4 (Optional) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%What if you start next to the oracle? then it fails.
+
 solve_task_4(Task,Cost):-
   my_agent(Agent),
-  query_world( agent_current_position, [Agent,P]),
-  solve_task_bt(Task,[c(0,P),P],0,R,Cost,_NewPos,[]),!,  % prune choice point for efficiency
+  query_world(agent_current_position, [Agent,P]),
+  solve_task_bt(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos,[]),!,  % prune choice point for efficiency
   reverse(R,[_Init|Path]),
-  query_world( agent_do_moves, [Agent,Path] ).
+
+  writeln(Path),
+  % Here is the problem!
+  (do_the_move(Path,Agent)
+    -> true
+   ;writeln('Recalculating Route'), solve_task_4(Task,NCost,1)
+   ).
+
+%%%%%%%Route recalculation
+solve_task_4(Task,NCost,1):-
+  my_agent(Agent),
+  writeln('ln38'),
+  query_world(agent_current_position, [Agent,P]),
+  writeln('ln40'),
+  solve_task_bt(Task,[[c(0,0,P),P]],0,R,Cost,_NewPos,[]),!,  % prune choice point for efficiency
+  reverse(R,[_Init|Path]),
+  writeln('New Path'),
+  writeln(Path),
+  % Here is the problem!
+  (do_the_move(Path,Agent)
+    -> true
+   ;writeln('Recalculating Route again'), solve_task_4(Task,Cost)
+   ).
+
+do_the_move([],Agent).
+  
+do_the_move([Last],Agent):-
+    writeln('Doing last move'),
+    query_world( agent_do_moves, [Agent,[Last]]).
+
+do_the_move([First|Path],Agent):-
+    writeln('Doing move'),
+    writeln(First),
+    query_world( agent_do_moves, [Agent,[First]]),
+    do_the_move(Path,Agent).
+
+
+  
 %%%%%%%%%% Part 4 (Optional) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -30,6 +70,7 @@ solve_task_4(Task,Cost):-
 
 %Base case -> supplies the task, checks if Current is a goal node, produces depth
 % the reverse path, cost and depth?! New pos for backtracking, and visited = list of visited nodes.
+
 solve_task_bt(Task,[Current|Agenda],Depth,RPath,[cost(Cost),depth(Depth)],NewPos,Visited) :-  
   achieved(Task,Current,RPath,Cost,NewPos).
 
@@ -59,14 +100,20 @@ solve_task_bt(go(GoalPos),[Current|Agenda],D,RR,Cost,NewPos,Visited) :-
 solve_task_bt(find(o(X)),[Current|Agenda],D,RR,Cost,NewPos,Visited) :-
   
   %Obtains the current node along with its cost and the path to get there.
+
   Current = [c(F,G,P)|RPath],
+
   D1 is D +1,  
 
   %Set the distance travelled to G+1 for all children of the current node.
   G1 is G+1, 
 
+
+
   %Find all the children of the current node... but they cannot be in visited list.
   %If there are no such children and therefore setof fails -> leave the agenda unchanged.
+  
+
   (setof([c(G1,G1,Pos1),Pos1|RPath], search2(P,Pos1,Pos1,_,F1,_,G1,Visited), Children) 
   -> merge(Agenda,Children,NewAgenda)
   ; NewAgenda = Agenda
@@ -101,9 +148,9 @@ solve_task_bt(find(c(X)),[Current|Agenda],D,RR,Cost,NewPos,Visited) :-
 
 
 
-  %Remove Agendas going to places already seen.
-  remove_items(NewAgenda,[],NewAgenda).
-  remove_items(NewAgenda,[H|Tail],MinusAgenda):-
+%Remove Agendas going to places already seen.
+remove_items(NewAgenda,[],NewAgenda).
+remove_items(NewAgenda,[H|Tail],MinusAgenda):-
     delete(NewAgenda,[c(_,_,H)|_],MinusAgenda),
     remove_items(MinusAgenda,Tail,NewMinus).
 
@@ -134,10 +181,12 @@ achieved(go(Exit),Current,RPath,Cost,NewPos) :-
   ; otherwise -> RPath = [Exit|_]
   ).
 achieved(find(O),Current,RPath,Cost,NewPos) :-
+  my_agent(Agent),
   Current = [c(Cost,Travel,NewPos)|RPath],
   ( O=none    -> true
   ; otherwise -> RPath = [Last|_],map_adjacent(Last,_,O)
-  ).
+   ,\+query_world(agent_check_oracle,[Agent,O])).
+
 
 search1(F,N,N,1,F1,GoalPos,G1,Visited) :-
   map_adjacent(F,N,empty),
